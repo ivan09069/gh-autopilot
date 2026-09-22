@@ -8,7 +8,7 @@ Commands:
     enrich-report   Merge AI results into markdown report
 
 Env:
-    ANTHROPIC_API_KEY   Required. Claude API key.
+    ANTHROPIC_API_KEY   Optional. Without it, pr-risk keeps the local heuristic.
     AI_REPO_INTEL_MODEL Optional. Default: claude-sonnet-4-20250514
     AI_REPO_INTEL_DEBUG Optional. Set "1" for verbose stderr logging.
 """

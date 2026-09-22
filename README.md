@@ -18,9 +18,10 @@ github-autopilot.ps1  (Control Plane)        ai_repo_intel.py  (Reasoning Plane)
 ## Quick Start
 
 ```powershell
-# One-time setup
+# Python 3 standard library only. No pip install.
+# The risk score uses a local heuristic until you set a key.
 Set-ExecutionPolicy -Scope Process Bypass
-$env:ANTHROPIC_API_KEY = "sk-ant-..."
+$env:ANTHROPIC_API_KEY = "<your Anthropic key>"
 
 # Basic run
 .\github-autopilot.ps1 -TopRepos 3 -CreateMaintenancePRs
