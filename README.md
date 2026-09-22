@@ -91,3 +91,8 @@ $env:ANTHROPIC_API_KEY = "sk-ant-..."
 - GitHub CLI (`gh`) authenticated
 - Python 3.10+ (for AI features, stdlib only)
 - Git
+
+## License
+
+Copyright (c) 2026 EchoForge Studios. All rights reserved.
+No use or copy is permitted without a written license. See [LICENSE](LICENSE).
