@@ -14,7 +14,7 @@ BASE_POLICY = {
     "trigger_label": "agent:ready",
     "allowed_issue_authors": ["ivan09069"],
     "branch_prefix": "agent/",
-    "agent": {"command": ["codex", "exec", "--sandbox", "workspace-write", "{prompt}"]},
+    "agent": {"command": ["codex", "exec", "--sandbox", "workspace-write", "-"]},
     "limits": {"max_changed_files": 3, "max_changed_lines": 20},
     "protected_paths": [
         ".github/workflows/**",
@@ -103,6 +103,13 @@ class PolicyTests(unittest.TestCase):
         with patch("agent_core.subprocess.run", return_value=completed) as mocked:
             aw.run(["x"])
         self.assertIs(mocked.call_args.kwargs["stdin"], subprocess.DEVNULL)
+
+    def test_trusted_runner_pipes_explicit_input(self):
+        completed = subprocess.CompletedProcess(["x"], 0, "", "")
+        with patch("agent_core.subprocess.run", return_value=completed) as mocked:
+            aw.run(["x"], input_text="multiline\nprompt")
+        self.assertEqual(mocked.call_args.kwargs["input"], "multiline\nprompt")
+        self.assertIsNone(mocked.call_args.kwargs["stdin"])
 
 
 if __name__ == "__main__":

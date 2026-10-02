@@ -240,12 +240,14 @@ HARD EXECUTION RULES
     def run_agent(self, issue: Issue) -> None:
         prompt = self.prompt_for(issue)
         template = self.policy["agent"]["command"]
-        args = [str(x).replace("{prompt}", prompt) for x in template]
+        args = [str(x) for x in template]
+        if any("{prompt}" in x for x in args):
+            raise PolicyError("agent command must consume the task prompt through stdin")
         if not self.agent_executable:
             raise PolicyError("agent executable was not resolved during preflight")
         args[0] = self.agent_executable
         timeout = int(self.policy["agent"].get("timeout_seconds", 3600))
-        proc = run(args, cwd=self.checkout, env=self.agent_env(), timeout=timeout, check=False)
+        proc = run(args, cwd=self.checkout, env=self.agent_env(), input_text=prompt, timeout=timeout, check=False)
         log = self.logs / f"issue-{issue.number}-{int(time.time())}.log"
         log.write_text(redact(proc.stdout + "\n--- STDERR ---\n" + proc.stderr), encoding="utf-8")
         if proc.returncode != 0:

@@ -80,6 +80,7 @@ def run(
     *,
     cwd: Path | None = None,
     env: dict[str, str] | None = None,
+    input_text: str | None = None,
     timeout: int = 300,
     check: bool = True,
 ) -> subprocess.CompletedProcess[str]:
@@ -88,7 +89,8 @@ def run(
         cwd=str(cwd) if cwd else None,
         env=env,
         text=True,
-        stdin=subprocess.DEVNULL,
+        input=input_text,
+        stdin=None if input_text is not None else subprocess.DEVNULL,
         capture_output=True,
         timeout=timeout,
         shell=False,
