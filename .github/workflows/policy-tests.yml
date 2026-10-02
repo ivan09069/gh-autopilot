@@ -1,0 +1,24 @@
+name: Policy worker tests
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  policy-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run policy tests
+        run: python -m unittest discover -s tests -v
+      - name: Validate policy
+        run: python agent_worker.py --check-policy
+      - name: Compile worker
+        run: python -m py_compile agent_core.py agent_worker.py
