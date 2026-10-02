@@ -175,6 +175,7 @@ class Supervisor:
 
     def prepare_branch(self, issue: Issue) -> str:
         branch = branch_for_issue(self.policy, issue.number)
+        validate_push_branch(self.policy, branch)
         existing = run(
             ["git", "ls-remote", "--heads", "origin", f"refs/heads/{branch}"],
             cwd=self.checkout,
@@ -184,6 +185,15 @@ class Supervisor:
             raise PolicyError(
                 f"remote branch {branch} already exists; refusing to overwrite an existing proposal"
             )
+        local = run(
+            ["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
+            cwd=self.checkout, check=False,
+        )
+        if local.returncode == 0:
+            current = run(["git", "branch", "--show-current"], cwd=self.checkout).stdout.strip()
+            if current == branch:
+                raise PolicyError("refusing to delete the currently checked-out proposal branch")
+            run(["git", "branch", "-D", branch], cwd=self.checkout)
         run(["git", "checkout", "-b", branch, f"origin/{self.default_branch}"], cwd=self.checkout)
         return branch
 
