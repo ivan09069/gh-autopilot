@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 import agent_worker as aw
@@ -85,6 +86,16 @@ class PolicyTests(unittest.TestCase):
         a = aw.Issue(1, "x", "a", "ivan09069", "t1", "u")
         b = aw.Issue(1, "x", "b", "ivan09069", "t2", "u")
         self.assertNotEqual(a.fingerprint, b.fingerprint)
+
+    def test_windows_cmd_shim_resolution(self):
+        def which(name):
+            return r"C:\npm\codex.cmd" if name == "codex.cmd" else None
+        with patch("agent_worker.shutil.which", side_effect=which):
+            self.assertEqual(aw.resolve_executable("codex", windows=True), r"C:\npm\codex.cmd")
+
+    def test_missing_agent_executable_returns_none(self):
+        with patch("agent_worker.shutil.which", return_value=None):
+            self.assertIsNone(aw.resolve_executable("codex", windows=True))
 
 
 if __name__ == "__main__":

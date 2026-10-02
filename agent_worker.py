@@ -78,6 +78,19 @@ class State:
         self.db.commit()
 
 
+def resolve_executable(name: str, *, windows: bool | None = None) -> str | None:
+    if windows is None:
+        windows = os.name == "nt"
+    candidates = [name]
+    if windows and not Path(name).suffix:
+        candidates.extend([f"{name}.cmd", f"{name}.exe", f"{name}.bat"])
+    for candidate in candidates:
+        resolved = shutil.which(candidate)
+        if resolved:
+            return resolved
+    return None
+
+
 class Supervisor:
     def __init__(self, policy_path: Path, dry_run: bool = False) -> None:
         self.policy_path = policy_path.resolve()
@@ -90,6 +103,7 @@ class Supervisor:
         self.checkout = root / "repo"
         self.logs = root / "logs"
         self.sandbox_home = root / "agent-home"
+        self.agent_executable: str | None = None
         self.state = State(root / "state.sqlite3")
         self.root.mkdir(parents=True, exist_ok=True)
         self.logs.mkdir(parents=True, exist_ok=True)
@@ -100,7 +114,8 @@ class Supervisor:
             if shutil.which(exe) is None:
                 raise PolicyError(f"required executable not found: {exe}")
         agent_cmd = self.policy["agent"]["command"]
-        if not agent_cmd or shutil.which(agent_cmd[0]) is None:
+        self.agent_executable = resolve_executable(agent_cmd[0]) if agent_cmd else None
+        if not self.agent_executable:
             raise PolicyError(f"agent executable not found: {agent_cmd[0] if agent_cmd else '<empty>'}")
         run(["gh", "auth", "status"], timeout=30)
         actual = run(["gh", "repo", "view", self.repo_name, "--json", "nameWithOwner,defaultBranchRef"]).stdout
@@ -216,6 +231,9 @@ HARD EXECUTION RULES
         prompt = self.prompt_for(issue)
         template = self.policy["agent"]["command"]
         args = [str(x).replace("{prompt}", prompt) for x in template]
+        if not self.agent_executable:
+            raise PolicyError("agent executable was not resolved during preflight")
+        args[0] = self.agent_executable
         timeout = int(self.policy["agent"].get("timeout_seconds", 3600))
         proc = run(args, cwd=self.checkout, env=self.agent_env(), timeout=timeout, check=False)
         log = self.logs / f"issue-{issue.number}-{int(time.time())}.log"
