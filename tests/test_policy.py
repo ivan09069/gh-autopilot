@@ -14,7 +14,7 @@ BASE_POLICY = {
     "trigger_label": "agent:ready",
     "allowed_issue_authors": ["ivan09069"],
     "branch_prefix": "agent/",
-    "agent": {"command": ["codex", "exec", "--full-auto", "{prompt}"]},
+    "agent": {"command": ["codex", "exec", "--sandbox", "workspace-write", "{prompt}"]},
     "limits": {"max_changed_files": 3, "max_changed_lines": 20},
     "protected_paths": [
         ".github/workflows/**",
