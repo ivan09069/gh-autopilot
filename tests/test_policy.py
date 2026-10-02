@@ -1,4 +1,5 @@
 import json
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -96,6 +97,12 @@ class PolicyTests(unittest.TestCase):
     def test_missing_agent_executable_returns_none(self):
         with patch("agent_worker.shutil.which", return_value=None):
             self.assertIsNone(aw.resolve_executable("codex", windows=True))
+
+    def test_trusted_runner_closes_stdin(self):
+        completed = subprocess.CompletedProcess(["x"], 0, "", "")
+        with patch("agent_core.subprocess.run", return_value=completed) as mocked:
+            aw.run(["x"])
+        self.assertIs(mocked.call_args.kwargs["stdin"], subprocess.DEVNULL)
 
 
 if __name__ == "__main__":

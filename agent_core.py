@@ -88,6 +88,7 @@ def run(
         cwd=str(cwd) if cwd else None,
         env=env,
         text=True,
+        stdin=subprocess.DEVNULL,
         capture_output=True,
         timeout=timeout,
         shell=False,
