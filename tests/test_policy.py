@@ -103,6 +103,8 @@ class PolicyTests(unittest.TestCase):
         with patch("agent_core.subprocess.run", return_value=completed) as mocked:
             aw.run(["x"])
         self.assertIs(mocked.call_args.kwargs["stdin"], subprocess.DEVNULL)
+        self.assertEqual(mocked.call_args.kwargs["encoding"], "utf-8")
+        self.assertEqual(mocked.call_args.kwargs["errors"], "replace")
 
     def test_trusted_runner_pipes_explicit_input(self):
         completed = subprocess.CompletedProcess(["x"], 0, "", "")

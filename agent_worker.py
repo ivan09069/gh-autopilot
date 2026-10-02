@@ -249,7 +249,7 @@ HARD EXECUTION RULES
         timeout = int(self.policy["agent"].get("timeout_seconds", 3600))
         proc = run(args, cwd=self.checkout, env=self.agent_env(), input_text=prompt, timeout=timeout, check=False)
         log = self.logs / f"issue-{issue.number}-{int(time.time())}.log"
-        log.write_text(redact(proc.stdout + "\n--- STDERR ---\n" + proc.stderr), encoding="utf-8")
+        log.write_text(redact((proc.stdout or "") + "\n--- STDERR ---\n" + (proc.stderr or "")), encoding="utf-8")
         if proc.returncode != 0:
             raise CommandError(f"agent exited {proc.returncode}; sanitized log: {log}")
 
@@ -258,7 +258,7 @@ HARD EXECUTION RULES
         for command in self.policy.get("validation_commands", []):
             args = [str(x) for x in command]
             proc = run(args, cwd=self.checkout, timeout=1800, check=False)
-            output = redact((proc.stdout + "\n" + proc.stderr)[-6000:])
+            output = redact(((proc.stdout or "") + "\n" + (proc.stderr or ""))[-6000:])
             results.append((" ".join(args), proc.returncode == 0, output))
             if proc.returncode != 0:
                 break

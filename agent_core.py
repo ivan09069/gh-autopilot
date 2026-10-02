@@ -89,6 +89,8 @@ def run(
         cwd=str(cwd) if cwd else None,
         env=env,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         input=input_text,
         stdin=None if input_text is not None else subprocess.DEVNULL,
         capture_output=True,
@@ -97,10 +99,12 @@ def run(
     )
     if check and proc.returncode != 0:
         cmd = " ".join(shlex.quote(x) for x in args)
+        stdout = proc.stdout or ""
+        stderr = proc.stderr or ""
         raise CommandError(
             f"command failed ({proc.returncode}): {cmd}\n"
-            f"stdout: {redact(proc.stdout[-4000:])}\n"
-            f"stderr: {redact(proc.stderr[-4000:])}"
+            f"stdout: {redact(stdout[-4000:])}\n"
+            f"stderr: {redact(stderr[-4000:])}"
         )
     return proc
 
