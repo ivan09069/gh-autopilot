@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "repository": "ivan09069/gh-autopilot",
+  "default_branch": "master",
+  "trigger_label": "agent:ready",
+  "allowed_issue_authors": ["ivan09069"],
+  "branch_prefix": "agent/",
+  "poll_seconds": 900,
+  "workspace_root": "~/.gh-autopilot-worker",
+  "agent": {
+    "command": ["codex", "exec", "--sandbox", "workspace-write", "-"],
+    "timeout_seconds": 3600,
+    "network_credentials": "withheld"
+  },
+  "limits": {
+    "max_changed_files": 25,
+    "max_changed_lines": 1200,
+    "max_issue_body_chars": 12000
+  },
+  "protected_paths": [
+    ".git/**",
+    ".github/workflows/**",
+    ".github/CODEOWNERS",
+    "agent_policy.json",
+    "agent_core.py",
+    "agent_worker.py",
+    "install-worker.ps1",
+    "github-autopilot.ps1",
+    "SECURITY.md",
+    "*.pem",
+    "*.key",
+    "*.p12",
+    "*.pfx",
+    "*.env",
+    ".env*",
+    "**/secrets/**",
+    "**/credentials/**"
+  ],
+  "validation_commands": [
+    ["python", "-m", "unittest", "discover", "-s", "tests", "-v"]
+  ],
+  "pr": {
+    "draft": true,
+    "title_prefix": "agent: ",
+    "maintainer_can_modify": true
+  }
+}

@@ -1,99 +1,88 @@
-# GitHub Autopilot + AI Reasoning Plane
+# GitHub Autopilot — Policy-Gated Repository Agent
 
-Automated repo maintenance with AI-powered PR risk scoring and scout pattern extraction.
+A self-hosted, always-on repository agent with **PR-only writes**.
 
-## Architecture
+The worker watches one repository for issues labeled `agent:ready`, lets Codex implement the task locally, validates the resulting diff, and—only if every policy gate passes—pushes an `agent/*` branch and opens a **draft pull request**. It never merges or deploys.
 
+## Current canary scope
+
+- Repository: `ivan09069/gh-autopilot`
+- Default branch: `master`
+- Trigger: open issue with label `agent:ready`
+- Authorized issue author: `ivan09069`
+- Maximum concurrency: 1
+- External code writes: `agent/*` branch + draft PR only
+- Merge/deploy/default-branch writes: **not implemented**
+
+## Control architecture
+
+```text
+GitHub issue (agent:ready)
+        |
+        v
+ trusted supervisor  ---- local SQLite memory / audit state
+        |
+        +--> sync master (trusted git/gh credentials)
+        |
+        +--> create local agent/issue-N branch
+        |
+        v
+ Codex workspace sandbox
+   - edits local files
+   - no GH_TOKEN/GITHUB_TOKEN
+   - empty GH_CONFIG_DIR
+   - no merge/push/deploy authority
+        |
+        v
+ trusted policy gate
+   - protected-path check
+   - file/line limits
+   - validation commands
+   - exact branch-prefix check
+   - staged-diff consistency check
+   - exactly one proposal commit
+        |
+        v
+ push agent/issue-N --> OPEN DRAFT PR --> HUMAN REVIEW
 ```
-github-autopilot.ps1  (Control Plane)        ai_repo_intel.py  (Reasoning Plane)
-├── Repo discovery & ranking                  ├── PR risk scoring (Anthropic API)
-├── Clone / update                            ├── Scout pattern extraction
-├── Install / lint / test / build             ├── Report enrichment
-├── GitHub Actions updates                    └── Heuristic fallback (no API needed)
-├── PR enumeration & merge execution
-├── Scout mode
-└── Report generation (JSON + Markdown)
-```
 
-## Quick Start
+## Files
+
+- `agent_worker.py` — trusted supervisor and always-on poller; standard library only.
+- `agent_core.py` — fail-closed policy, redaction, branch, path, and diff enforcement.
+- `agent_policy.json` — repository scope, author allowlist, protected paths, limits, validation, and Codex command.
+- `install-worker.ps1` — Windows self-host installer using Task Scheduler.
+- `github-autopilot.ps1` — compatibility shim; the old auto-merge behavior is removed.
+- `tests/test_policy.py` — policy regression tests.
+- `SECURITY.md` — enforcement boundary and credential model.
+
+## Local verification
 
 ```powershell
-# Python 3 standard library only. No pip install.
-# The risk score uses a local heuristic until you set a key.
-Set-ExecutionPolicy -Scope Process Bypass
-$env:ANTHROPIC_API_KEY = "<your Anthropic key>"
-
-# Basic run
-.\github-autopilot.ps1 -TopRepos 3 -CreateMaintenancePRs
-
-# With AI scoring
-.\github-autopilot.ps1 -TopRepos 3 -EnableAI -CreateMaintenancePRs
-
-# Scout + AI
-.\github-autopilot.ps1 -TopRepos 3 -ScoutMode -TopScoutRepos 5 -EnableAI
-
-# Loop mode (runs every 6 hours)
-.\github-autopilot.ps1 -TopRepos 3 -ScoutMode -Loop -LoopHours 6 -EnableAI
-
-# Stricter merge threshold
-.\github-autopilot.ps1 -TopRepos 5 -EnableAI -AIAutoMergeThreshold 15 -CreateMaintenancePRs
+python -m unittest discover -s tests -v
+python .\agent_worker.py --check-policy
+python .\agent_worker.py --dry-run
 ```
 
-## Parameters
+`--dry-run` lets the agent edit and validate locally but prevents branch push and PR creation.
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| -Workspace | $HOME\gh-autopilot | Working directory |
-| -TopRepos | 5 | Number of owned repos to process |
-| -CreateMaintenancePRs | off | Enable PR creation and auto-merge |
-| -ScoutMode | off | Clone starred repos for pattern analysis |
-| -TopScoutRepos | 5 | Number of repos to scout |
-| -Loop | off | Continuous execution mode |
-| -LoopHours | 6 | Hours between loop cycles |
-| -MaxPRLines | 500 | Skip PRs larger than this |
-| -EnableAI | off | Activate AI reasoning plane |
-| -AIPythonPath | python | Path to Python executable |
-| -AIModulePath | (auto) | Path to ai_repo_intel.py |
-| -AIAutoMergeThreshold | 25 | Max AI score for auto-merge |
+## Install on a Windows self-host
 
-## Hard Guardrails
+Run from an authenticated workstation that already has `git`, `gh`, `python`, and `codex`:
 
-- Skips draft PRs
-- Skips non-mergeable PRs
-- Skips PRs over 500 changed lines (configurable)
-- Requires validation pass before auto-merge
-- AI score must be <= threshold for auto-merge
-- Separates owned and scouted workspaces
-- Hard rules override AI judgment:
-  - Failing tests = floor score 50
-  - Security/deploy paths = cannot auto-merge (unless deps-only + tests pass)
-  - Workflow changes = escalated to review
-  - No-test repo + core logic = cannot auto-merge
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\install-worker.ps1
+```
 
-## AI Risk Scoring Bands
+The installer validates the policy, registers `GH-Autopilot-PolicyWorker` to start at logon, starts it immediately, and prints the task state/result.
 
-| Score | Band | Action |
-|-------|------|--------|
-| 0-25 | auto_merge | Safe to merge |
-| 26-60 | review | Needs human review |
-| 61-100 | skip | Do not merge |
+## Triggering work
 
-## Environment Variables
+Create or edit a GitHub issue in this repository and add the label `agent:ready`. The issue title/body is the task specification. Only allowed authors are accepted.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| ANTHROPIC_API_KEY | For AI | Claude API key |
-| AI_REPO_INTEL_MODEL | No | Default: claude-sonnet-4-20250514 |
-| AI_REPO_INTEL_DEBUG | No | Set "1" for verbose Python logs |
+The first accepted task becomes a local job. If Codex changes a protected control-plane path, exceeds policy limits, or fails validation, the job is recorded as blocked and **nothing is pushed**.
 
-## Requirements
+## Design note
 
-- PowerShell 5.1+ or 7+
-- GitHub CLI (`gh`) authenticated
-- Python 3.10+ (for AI features, stdlib only)
-- Git
-
-## License
-
-Copyright (c) 2026 EchoForge Studios. All rights reserved.
-No use or copy is permitted without a written license. See [LICENSE](LICENSE).
+OpenAI's current self-hosted-agent guidance recommends isolating the execution environment, keeping application/third-party credentials outside the agent environment, and enforcing approval/guardrail decisions at the side-effect boundary. This implementation follows that split: Codex proposes a local diff; the supervisor independently decides whether a draft PR write is allowed.
