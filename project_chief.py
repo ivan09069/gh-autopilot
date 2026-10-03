@@ -14,6 +14,23 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
+DOCTRINE = {
+    "motto": "Built for JIT. Built by JIT. Built with JIT.",
+    "primary_metric": "principal attention saved per verified release packet",
+    "principles": (
+        "protect_principal_bandwidth",
+        "capture_ideas_without_interrupting_execution",
+        "delegate_implementation",
+        "finish_packets_not_living_systems",
+        "no_tunnel_vision",
+        "verification_over_assertion",
+        "explicit_human_authority",
+        "continue_reversible_work",
+        "organize_by_capability",
+        "measure_verified_leverage",
+    ),
+}
+
 VALID_STATUSES = {
     "idea",
     "shaped",
@@ -180,6 +197,11 @@ def build_plan(tasks: Iterable[Task], max_per_group: int = 3) -> dict[str, Any]:
     approvals.sort(key=lambda x: x["task_id"])
     blocked.sort(key=lambda x: x["task_id"])
     return {
+        "doctrine": {
+            "motto": DOCTRINE["motto"],
+            "primary_metric": DOCTRINE["primary_metric"],
+            "principles": list(DOCTRINE["principles"]),
+        },
         "execution_groups": execution_groups,
         "human_approval_queue": approvals,
         "blocked_queue": blocked,
