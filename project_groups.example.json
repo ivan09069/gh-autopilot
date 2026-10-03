@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "groups": [
+    {
+      "id": "control-plane",
+      "policy": "proposal branches and draft PRs only"
+    },
+    {
+      "id": "evidence-forensics",
+      "policy": "preserve provenance; read-only acquisition by default"
+    },
+    {
+      "id": "blockchain-tooling",
+      "policy": "tests/builds allowed; no live transactions"
+    },
+    {
+      "id": "agent-platforms",
+      "policy": "repository work allowed; external writes require policy approval"
+    },
+    {
+      "id": "trading-research",
+      "policy": "simulation/research only; live financial action requires principal approval"
+    },
+    {
+      "id": "industrial-ai",
+      "policy": "research/prototyping; no equipment control without explicit authorization"
+    },
+    {
+      "id": "unclassified",
+      "policy": "intake only until shaped"
+    }
+  ],
+  "note": "Keep the real repository registry local/private. Do not commit private repository names into a public control-plane repository."
+}
