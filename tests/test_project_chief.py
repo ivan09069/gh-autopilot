@@ -1,6 +1,6 @@
 import unittest
 
-from project_chief import Task, build_plan, next_state, priority_score, requires_human
+from project_chief import DOCTRINE, Task, build_plan, next_state, priority_score, requires_human
 
 
 class ProjectChiefTests(unittest.TestCase):
@@ -45,6 +45,16 @@ class ProjectChiefTests(unittest.TestCase):
     def test_invalid_status_rejected(self):
         with self.assertRaises(ValueError):
             Task.from_mapping({"task_id": "A", "title": "bad", "status": "finished-forever"})
+
+    def test_doctrine_is_part_of_every_plan(self):
+        plan = build_plan([])
+        self.assertEqual(plan["doctrine"]["motto"], "Built for JIT. Built by JIT. Built with JIT.")
+        self.assertEqual(
+            plan["doctrine"]["primary_metric"],
+            "principal attention saved per verified release packet",
+        )
+        self.assertIn("no_tunnel_vision", plan["doctrine"]["principles"])
+        self.assertEqual(plan["doctrine"]["motto"], DOCTRINE["motto"])
 
 
 if __name__ == "__main__":
