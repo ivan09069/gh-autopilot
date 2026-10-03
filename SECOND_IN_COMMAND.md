@@ -1,5 +1,11 @@
 # Second-in-Command Operating Model
 
+## Founding doctrine
+
+> **Built for JIT. Built by JIT. Built with JIT.**
+
+The authoritative operating doctrine is defined in [`JIT_DOCTRINE.md`](JIT_DOCTRINE.md). The Project Chief exists to turn that doctrine into execution: protect principal bandwidth, capture new ideas without interrupting active work, delegate implementation, preserve competing hypotheses, verify results independently, and close finite release packets without pretending living systems are permanently finished.
+
 ## Purpose
 
 The principal should not have to hold every project in working memory or personally drive every implementation pass.
@@ -101,4 +107,4 @@ The Project Chief is working when the principal can state a new idea in a few se
 6. obtains independent review,
 7. reports only the result, blocker, or approval gate.
 
-The metric is **principal attention saved per verified release packet**, not number of ideas suppressed.
+The primary metric is **principal attention saved per verified release packet**.
