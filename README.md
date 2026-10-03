@@ -1,6 +1,10 @@
 # GitHub Autopilot + AI Reasoning Plane
 
+> **Built for JIT. Built by JIT. Built with JIT.**
+
 Automated repo maintenance with AI-powered PR risk scoring and scout pattern extraction.
+
+The operating doctrine for the Project Chief control plane is defined in [`JIT_DOCTRINE.md`](JIT_DOCTRINE.md) on the active proposal branch.
 
 ## Architecture
 
